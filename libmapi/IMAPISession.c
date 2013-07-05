@@ -338,17 +338,13 @@ retry:
 	mem_ctx = talloc_named(session, 0, "OpenMsgStore");
 	size = 0;
 
-	if (!username) {
-		mailbox = talloc_strdup(mem_ctx, session->profile->mailbox);
-	} else {
-		mailbox = talloc_asprintf(mem_ctx, "/o=%s/ou=%s/cn=Recipients/cn=%s", session->profile->org,
-					  session->profile->ou, username);
-	}
+	mailbox = talloc_strdup(mem_ctx, session->profile->mailbox);
 
 	/* Fill the Logon operation */
 	request.LogonFlags = LogonPrivate;
 	size += sizeof (uint8_t);
-	request.OpenFlags = HOME_LOGON | TAKE_OWNERSHIP | NO_MAIL;
+	request.OpenFlags = HOME_LOGON | TAKE_OWNERSHIP | NO_MAIL |
+        USE_PER_MDB_REPLID_MAPPING;
 	size += sizeof (uint32_t);
 	request.StoreState = 0;
 	size += sizeof (uint32_t);
