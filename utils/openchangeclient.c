@@ -450,7 +450,7 @@ static enum MAPISTATUS openchangeclient_fetchmail(mapi_object_t *obj_store,
 					     rowset.aRow[i].lpProps[0].value.d,
 					     rowset.aRow[i].lpProps[1].value.d,
 					     &obj_message, 0);
-			if (GetLastError() == MAPI_E_SUCCESS) {
+			if (retval == MAPI_E_SUCCESS) {
 				if (oclient->summary) {
 					mapidump_message_summary(&obj_message);
 				} else {
@@ -3212,19 +3212,22 @@ int main(int argc, const char *argv[])
 		}
 	}
 
-	retval = MapiLogonEx(oclient.mapi_ctx, &session, opt_profname, opt_password);
-	talloc_free(opt_profname);
-	if (retval != MAPI_E_SUCCESS) {
-		mapi_errstr("MapiLogonEx", GetLastError());
-		exit (1);
-	}
-
 	if (opt_userlist) {
+		retval = MapiLogonProvider(oclient.mapi_ctx, &session, 
+					   opt_profname, opt_password,
+					   PROVIDER_ID_NSPI);
 		if (false == openchangeclient_userlist(mem_ctx, session)) {
 			exit(1);
 		} else {
 			exit(0);
 		}
+	}
+
+	retval = MapiLogonEx(oclient.mapi_ctx, &session, opt_profname, opt_password);
+	talloc_free(opt_profname);
+	if (retval != MAPI_E_SUCCESS) {
+		mapi_errstr("MapiLogonEx", GetLastError());
+		exit (1);
 	}
 
 	/**

@@ -488,7 +488,7 @@ _PUBLIC_ enum MAPISTATUS EcDoRpc_RopCreateMessage(TALLOC_CTX *mem_ctx,
 	pt_long = 0x1;
 	set_SPropValue_proptag(aRow.lpProps + aRow.cValues, PR_ACCESS_LEVEL, (const void *)&pt_long);
 	aRow.cValues++;
-	set_SPropValue_proptag(aRow.lpProps + aRow.cValues, PR_URL_COMP_NAME_UNICODE, (const void *)"No Subject.EML");
+	set_SPropValue_proptag(aRow.lpProps + aRow.cValues, PidTagUrlCompName, (const void *)"No Subject.EML");
 	aRow.cValues++;
 
 	gettimeofday(&tv, NULL);
@@ -605,7 +605,7 @@ _PUBLIC_ enum MAPISTATUS EcDoRpc_RopSaveChangesMessage(TALLOC_CTX *mem_ctx,
 	case true:
                 contextID = emsmdbp_get_contextID(object);
 		messageID = object->object.message->messageID;
-		ret = mapistore_message_save(emsmdbp_ctx->mstore_ctx, contextID, object->backend_object);
+		ret = mapistore_message_save(emsmdbp_ctx->mstore_ctx, contextID, object->backend_object, mem_ctx);
 		if (ret == MAPISTORE_ERR_DENIED) {
 			mapi_repl->error_code = MAPI_E_NO_ACCESS;
 			goto end;
