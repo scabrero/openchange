@@ -238,7 +238,8 @@ _PUBLIC_ enum MAPISTATUS MAPIInitialize(struct mapi_context **_mapi_ctx, const c
 	mapi_ctx->mem_ctx = mem_ctx;
 	mapi_ctx->dumpdata = false;
 	mapi_ctx->session = NULL;
-	mapi_ctx->lp_ctx = loadparm_init_global(true);
+	mapi_ctx->lp_ctx = loadparm_init(mem_ctx);
+	OPENCHANGE_RETVAL_IF(!lpcfg_load_default(mapi_ctx->lp_ctx), MAPI_E_CALL_FAILED, mem_ctx);
 
 	/* Enable logging on stdout */
 	setup_logging(NULL, DEBUG_STDOUT);
@@ -282,7 +283,7 @@ _PUBLIC_ void MAPIUninitialize(struct mapi_context *mapi_ctx)
 		shutdown(session->notify_ctx->fd, SHUT_RDWR);
 		close(session->notify_ctx->fd);
 	}
-	
+
 	mem_ctx = mapi_ctx->mem_ctx;
 	talloc_free(mem_ctx);
 	mapi_ctx = NULL;
