@@ -689,19 +689,17 @@ static char **collapse_recipients(TALLOC_CTX *mem_ctx, struct oclient *oclient)
 	return usernames;
 }
 
+#define MAX_CHUNK_SIZE 0x1000
 /**
- * Write a stream with MAX_READ_SIZE chunks
+ * Write a stream with MAX_CHUNK_SIZE
  */
-
-#define	MAX_READ_SIZE	0x1000
-
 static bool openchangeclient_stream(TALLOC_CTX *mem_ctx, mapi_object_t obj_parent, 
 				    mapi_object_t obj_stream, uint32_t mapitag, 
 				    uint32_t access_flags, struct Binary_r bin)
 {
 	enum MAPISTATUS	retval;
 	DATA_BLOB	stream;
-	uint32_t	size;
+	uint32_t	chunk_size;
 	uint32_t	offset;
 	uint16_t	read_size;
 
@@ -714,13 +712,15 @@ static bool openchangeclient_stream(TALLOC_CTX *mem_ctx, mapi_object_t obj_paren
 
 	/* WriteStream operation */
 	printf("We are about to write %u bytes in the stream\n", bin.cb);
-	size = MAX_READ_SIZE;
+	chunk_size = MAX_CHUNK_SIZE;
 	offset = 0;
 	while (offset <= bin.cb) {
-		stream.length = size;
-		stream.data = talloc_size(mem_ctx, size);
-		memcpy(stream.data, bin.lpb + offset, size);
-		
+		chunk_size = (bin.cb - offset) < chunk_size ?
+				(bin.cb - offset) : chunk_size;
+		stream.length = chunk_size;
+		stream.data = talloc_size(mem_ctx, chunk_size);
+		memcpy(stream.data, bin.lpb + offset, chunk_size);
+
 		retval = WriteStream(&obj_stream, &stream, &read_size);
 		talloc_free(stream.data);
 		if (retval != MAPI_E_SUCCESS) return false;
@@ -734,10 +734,6 @@ static bool openchangeclient_stream(TALLOC_CTX *mem_ctx, mapi_object_t obj_paren
 		}
 		
 		offset += read_size;
-
-		if ((offset + size) > bin.cb) {
-			size = bin.cb - offset;
-		}
 	}
 
 	mapi_object_release(&obj_stream);
